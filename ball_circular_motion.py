@@ -1,11 +1,12 @@
 from tkinter import Tk, Canvas, Frame
 import math
 import time
-from datetime import datetime
+import csv
 
 COLOR = "brown"
 PROJECTION_COLOR = "#666666"
 SHOW_PROJECTION_LINE = True
+
 # mark an initial point
 class CircularMotion():
     # Create a 300x300 canvas
@@ -35,6 +36,9 @@ class CircularMotion():
         shadow_line = self.canvas.create_line(self.shadow_line_x, self.center_Y - self.Radius - 10,self.shadow_line_x, self.center_Y + self.Radius + 10)
         ball_shadow = self.create_projection_circle(self.shadow_line_x, self.center_Y, self.radius_of_rotaing_ball, fill=PROJECTION_COLOR)
 
+        # Initialing the csv file
+        self.write_init()
+
     def revolution_ball(self, projection = False):
         current_x = self.ball_center_x
         current_y = self.ball_center_y
@@ -54,14 +58,14 @@ class CircularMotion():
                     # Upward Part
                     if current_x == self.center_X + self.Radius:
                         flag = -1
-                        now = datetime.now()
 
                     # Down Part    
                     elif current_x == self.center_X - self.Radius:
                         flag = 1
-                        then = datetime.now()
-                        seconds_elapsed = str(then - now)
-                        print(float(seconds_elapsed[5::]))
+                                        
+                # Write the data in csv File
+                self.write_data(current_y)
+
                 # Determining the new postion of the ball in circular motion
                 current_x = current_x + flag
                 current_y = flag * math.sqrt(self.Radius ** 2 - (current_x - self.center_X)**2) + self.center_Y
@@ -104,8 +108,22 @@ class CircularMotion():
         self.my_ball = self.canvas.create_oval(x-r, y-r, x+r, y+r, **kwargs)
     
     def create_projection_circle(self, x, y, r, **kwargs):
-        self.projected_ball = self.canvas.create_oval(x-r, y-r, x+r, y+r, **kwargs)        
+        self.projected_ball = self.canvas.create_oval(x-r, y-r, x+r, y+r, **kwargs)  
 
+    def write_init(self):
+        self.time_data = 0.05
+        self.field_names = ["time", "displacement"]
+
+        with open('data.csv', 'w') as csv_writer:
+            csv_writer = csv.DictWriter(csv_writer, fieldnames=self.field_names)
+            csv_writer.writeheader()
+
+    def write_data(self, current_y):
+        with open('data.csv', 'a') as csv_file:
+            csv_writer = csv.DictWriter(csv_file, fieldnames= self.field_names)
+            info = {"time":round(self.time_data, 2), "displacement":(-1*round(current_y - 150, 2))}
+            csv_writer.writerow(info)
+            self.time_data += 0.05
     
 ball = CircularMotion(window_title="Ball Circular Motion")
 ball.mark_trajectory()
